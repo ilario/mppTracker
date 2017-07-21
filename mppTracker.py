@@ -337,7 +337,8 @@ def weAreDone(sm):
 # setup complete. the real mppTracker begins here
 
 # for curve exploration
-dAngleMax = 25 #[degrees] (plus and minus)
+dAngleMax = dAngleMaxLimit = 25 #[degrees] (plus and minus)
+dAngleMinLimit = 3
 previousScanStartDirection = -1 
 
 while True:
@@ -397,6 +398,8 @@ while True:
     p_explore = v_explore*i_explore
     maxIndexFirstScan = numpy.argmax(p_explore)
     VmppFirstScan = v_explore[maxIndex]
+    ImppFirstScan = i_explore[maxIndex]
+    angleMppFirstScan = numpy.rad2deg(numpy.arctan(ImppFirstScan/VmppFirstScan*Voc/Isc))
     myPrint("{limit} exploration voltage limit reached.".format(limit="Upper" if scanDirection == 1 else "Lower"), file=sys.stderr, flush=True)
     myPrint("Voltage for Mpp in {direction} scan found at {:.4e} V".format(VmppFirstScan, limit="forward" if scanDirection == 1 else "reverse"), file=sys.stderr, flush=True)
     i_explore = numpy.array(i)
@@ -419,12 +422,16 @@ while True:
     p_explore = v_explore*i_explore
     maxIndexSecondScan = numpy.argmax(p_explore)
     VmppSecondScan = v_explore[maxIndex]
+    ImppSecondScan = i_explore[maxIndex]
+    angleMppSecondScan = numpy.rad2deg(numpy.arctan(ImppSecondScan/VmppSecondScan*Voc/Isc))
     myPrint("{limit} exploration voltage limit reached.".format(limit="Upper" if scanDirection == 1 else "Lower"), file=sys.stderr, flush=True)
     myPrint("Voltage for Mpp in {direction} scan found at {:.4e} V".format(VmppSecondScan, limit="forward" if scanDirection == 1 else "reverse"), file=sys.stderr, flush=True)
     
     Vmpp = (VmppFirstScan + VmppSecondScan) / 2
     myPrint("New Mpp found at {:.4e} V:".format(Vmpp), file=sys.stderr, flush=True)
     
+    mppAngleVariation = max(abs(angleMpp - angleMppFirstScan), abs(angleMpp - angleMppSecondScan))
+    dAngleMax = min(mppAngleVariation + dAngleMinLimit, dAngleMaxLimit)
     # now let's walk back to our new Vmpp
     scanDirection = scanDirection * -1
     v_set = v_set + dV * scanDirection
