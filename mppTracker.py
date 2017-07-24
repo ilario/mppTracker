@@ -339,6 +339,10 @@ def weAreDone(sm):
 # for curve exploration
 dAngleMax = dAngleMaxLimit = 25 #[degrees] (plus and minus)
 dAngleMinLimit = 3
+<<<<<<< HEAD
+=======
+scannedPointsMinLimit = 5
+>>>>>>> 102f188... Fixes
 previousScanStartDirection = -1 
 
 while True:
@@ -381,8 +385,9 @@ while True:
         dAngle = numpy.rad2deg(numpy.arctan(i/v*Voc/Isc)) - angleMpp
     myPrint("{limit} exploration voltage limit reached.".format(limit="Upper" if scanDirection == 1 else "Lower"), file=sys.stderr, flush=True)
     scanDirection = scanDirection * -1
+    scannedPoints = 0
     myPrint("Scanning walking {direction} in voltage...".format(direction="up" if scanDirection == 1 else "down"), file=sys.stderr, flush=True)
-    while -dAngleMax < dAngle < dAngleMax:
+    while scannedPoints < scannedPointsMinLimit or -dAngleMax < dAngle < dAngleMax:
         v_set = v_set + dV * scanDirection
         sm.write(':source:voltage {0:0.4f}'.format(v_set))
         [v, i, tx, status] = sm.query_ascii_values('READ?')
@@ -394,19 +399,21 @@ while True:
         i_explore = numpy.append(i_explore, i)
         v_explore = numpy.append(v_explore, v)
         dAngle = numpy.rad2deg(numpy.arctan(i/v*Voc/Isc)) - angleMpp
+        scannedPoints += 1
     # find the powers for the values we just explored
     p_explore = v_explore*i_explore
     maxIndexFirstScan = numpy.argmax(p_explore)
-    VmppFirstScan = v_explore[maxIndex]
-    ImppFirstScan = i_explore[maxIndex]
+    VmppFirstScan = v_explore[maxIndexFirstScan]
+    ImppFirstScan = i_explore[maxIndexFirstScan]
     angleMppFirstScan = numpy.rad2deg(numpy.arctan(ImppFirstScan/VmppFirstScan*Voc/Isc))
     myPrint("{limit} exploration voltage limit reached.".format(limit="Upper" if scanDirection == 1 else "Lower"), file=sys.stderr, flush=True)
-    myPrint("Voltage for Mpp in {direction} scan found at {:.4e} V".format(VmppFirstScan, limit="forward" if scanDirection == 1 else "reverse"), file=sys.stderr, flush=True)
+    myPrint("Voltage for Mpp in {direction} scan found at {:.4e} V".format(VmppFirstScan, direction="forward" if scanDirection == 1 else "reverse"), file=sys.stderr, flush=True)
     i_explore = numpy.array(i)
     v_explore = numpy.array(v)
+    scannedPoints = 0
     scanDirection = scanDirection * -1
     myPrint("Scanning walking {direction} in voltage...".format(direction="up" if scanDirection == 1 else "down"), file=sys.stderr, flush=True)
-    while -dAngleMax < dAngle < dAngleMax:
+    while scannedPoints < scannedPointsMinLimit or -dAngleMax < dAngle < dAngleMax:
         v_set = v_set + dV * scanDirection
         sm.write(':source:voltage {0:0.4f}'.format(v_set))
         [v, i, tx, status] = sm.query_ascii_values('READ?')
@@ -418,14 +425,15 @@ while True:
         i_explore = numpy.append(i_explore, i)
         v_explore = numpy.append(v_explore, v)
         dAngle = numpy.rad2deg(numpy.arctan(i/v*Voc/Isc)) - angleMpp
+        scannedPoints += 1
     # find the powers for the values we just explored
     p_explore = v_explore*i_explore
     maxIndexSecondScan = numpy.argmax(p_explore)
-    VmppSecondScan = v_explore[maxIndex]
-    ImppSecondScan = i_explore[maxIndex]
+    VmppSecondScan = v_explore[maxIndexSecondScan]
+    ImppSecondScan = i_explore[maxIndexSecondScan]
     angleMppSecondScan = numpy.rad2deg(numpy.arctan(ImppSecondScan/VmppSecondScan*Voc/Isc))
     myPrint("{limit} exploration voltage limit reached.".format(limit="Upper" if scanDirection == 1 else "Lower"), file=sys.stderr, flush=True)
-    myPrint("Voltage for Mpp in {direction} scan found at {:.4e} V".format(VmppSecondScan, limit="forward" if scanDirection == 1 else "reverse"), file=sys.stderr, flush=True)
+    myPrint("Voltage for Mpp in {direction} scan found at {:.4e} V".format(VmppSecondScan, direction="forward" if scanDirection == 1 else "reverse"), file=sys.stderr, flush=True)
     
     Vmpp = (VmppFirstScan + VmppSecondScan) / 2
     myPrint("New Mpp found at {:.4e} V:".format(Vmpp), file=sys.stderr, flush=True)
