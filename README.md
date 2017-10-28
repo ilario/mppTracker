@@ -35,7 +35,7 @@ readable messages are written to stderr.
 positional arguments:
   address              VISA resource name for sourcemeter
   t_dwell              Total number of seconds for the dwell phase(s)
-  t_total              Total number of seconds to run for
+  t_total              Total number of seconds to run for, if 0 run forever
   max_current          Maximum current limit (amperes)
 
 optional arguments:
